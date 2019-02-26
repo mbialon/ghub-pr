@@ -5,6 +5,8 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/manifoldco/promptui"
@@ -23,6 +25,7 @@ type PullRequest struct {
 func main() {
 	owner := flag.String("owner", "", "github repository owner")
 	name := flag.String("name", "", "github repository name")
+	command := flag.String("exec", "", "exec command")
 	all := flag.Bool("all", false, "list both open and closed")
 	flag.Parse()
 
@@ -89,8 +92,14 @@ func main() {
 		Size:      4,
 		Searcher:  searcher,
 	}
-	_, _, err := s.Run()
+	i, _, err := s.Run()
 	if err != nil {
+		log.Fatal(err)
+	}
+	cmd := exec.Command(*command, strconv.Itoa(prs[i].Number), prs[i].HeadRefName)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
